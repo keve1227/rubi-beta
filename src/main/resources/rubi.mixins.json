@@ -4,12 +4,13 @@
     "compatibilityLevel": "JAVA_17",
     "client": [
         "MixinAccessibilityOptionsScreen",
+        "MixinBakedGlyphRectangle",
+        "MixinDrawnGlyph",
         "MixinGameOptions",
-        "MixinLineBreakingVisitor",
+        "MixinStyle",
         "MixinTextHandler",
-        "MixinTextRenderer",
         "MixinTextVisitFactory",
-        "MixinStringVisitable"
+        "MixinDrawer"
     ],
     "injectors": {
         "defaultRequire": 1
