@@ -21,6 +21,9 @@ public abstract class MixinTextRenderer {
     @Shadow
     private TextHandler handler;
 
+    @Unique
+    private boolean isSeparatingDrawCall = false;
+
     @Shadow
     public abstract int draw(
         OrderedText text,
@@ -49,12 +52,12 @@ public abstract class MixinTextRenderer {
 
     @Redirect(
         method = "draw(Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;" +
-                 "Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)I",
+            "Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)I",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/font/TextRenderer;drawInternal(Ljava/lang/String;FFIZLorg/joml/Matrix4f;" +
-                     "Lnet/minecraft/client/render/VertexConsumerProvider;" +
-                     "Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I"
+                "Lnet/minecraft/client/render/VertexConsumerProvider;" +
+                "Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I"
         )
     )
     public int redirectDraw(
@@ -87,8 +90,8 @@ public abstract class MixinTextRenderer {
 
     @Inject(
         method = "draw(Lnet/minecraft/text/OrderedText;FFIZLorg/joml/Matrix4f;" +
-                 "Lnet/minecraft/client/render/VertexConsumerProvider;" +
-                 "Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)I",
+            "Lnet/minecraft/client/render/VertexConsumerProvider;" +
+            "Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)I",
         at = @At("HEAD"),
         cancellable = true
     )
@@ -105,10 +108,10 @@ public abstract class MixinTextRenderer {
         int light,
         CallbackInfoReturnable<Integer> info
     ) {
-        var parsed = RubyText.cachedParse(text);
-
-        if (parsed.hasRuby()) {
-            float advance = parsed.draw(
+        if (!isSeparatingDrawCall) {
+            isSeparatingDrawCall = true;
+            int advance = TextDrawer.draw(
+                text,
                 x,
                 y,
                 matrix,
@@ -127,8 +130,8 @@ public abstract class MixinTextRenderer {
                     light
                 )
             );
-
-            info.setReturnValue((int) Math.ceil(advance));
+            isSeparatingDrawCall = false;
+            info.setReturnValue(advance);
         }
     }
 
@@ -144,10 +147,10 @@ public abstract class MixinTextRenderer {
         int light,
         CallbackInfo info
     ) {
-        var parsed = RubyText.cachedParse(text);
-
-        if (parsed.hasRuby()) {
-            parsed.draw(
+        if (!isSeparatingDrawCall) {
+            isSeparatingDrawCall = true;
+            TextDrawer.draw(
+                text,
                 x,
                 y,
                 matrix,
@@ -155,8 +158,8 @@ public abstract class MixinTextRenderer {
                 this.fontHeight,
                 (t, xx, yy, m) -> this.drawWithOutline(t, xx, yy, color, outlineColor, m, vertexConsumers, light)
             );
-
             info.cancel();
+            isSeparatingDrawCall = false;
         }
     }
 }
