@@ -1,5 +1,4 @@
 package com.kevinsundqvistnorlen.rubi.mixin.client;
-
 import com.kevinsundqvistnorlen.rubi.RubyText;
 import net.minecraft.text.StringVisitable;
 import org.spongepowered.asm.mixin.Mixin;
